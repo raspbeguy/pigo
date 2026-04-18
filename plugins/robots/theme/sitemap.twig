@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+{% for record in sitemap %}    <url>
+        <loc>{{ record.url|escape }}</loc>
+{% if record.lastmod %}        <lastmod>{{ record.lastmod }}</lastmod>
+{% endif %}{% if record.changefreq %}        <changefreq>{{ record.changefreq }}</changefreq>
+{% endif %}{% if record.priority %}        <priority>{{ record.priority }}</priority>
+{% endif %}    </url>
+{% endfor %}</urlset>

@@ -1,0 +1,5 @@
+site_title: Test Site
+base_url: http://example.test
+rewrite_url: true
+theme: test-theme
+date_format: "%Y-%m-%d"

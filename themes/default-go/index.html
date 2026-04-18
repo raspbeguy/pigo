@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{{ with .meta.title }}{{ . }} | {{ end }}{{ .site_title }}</title>
+{{ with .meta.description }}<meta name="description" content="{{ . }}">{{ end }}
+<link rel="stylesheet" href="{{ .theme_url }}/style.css">
+</head>
+<body>
+<header>
+<h1><a href="{{ .base_url }}">{{ .site_title }}</a></h1>
+<nav>
+<ul>
+{{ range .pages }}
+{{ if not .hidden }}<li><a href="{{ .url }}">{{ if .title }}{{ .title }}{{ else }}{{ .id }}{{ end }}</a></li>{{ end }}
+{{ end }}
+</ul>
+</nav>
+</header>
+<main>
+<article>
+{{ with .meta.title }}<h2>{{ . }}</h2>{{ end }}
+{{ with .meta.date_formatted }}<time datetime="{{ $.meta.date }}">{{ . }}</time>{{ end }}
+{{ .content }}
+</article>
+<nav class="page-nav">
+{{ with .current_page.prev_page }}<a rel="prev" href="{{ .url }}">&larr; {{ .title }}</a>{{ end }}
+{{ with .current_page.next_page }}<a rel="next" href="{{ .url }}">{{ .title }} &rarr;</a>{{ end }}
+</nav>
+</main>
+<footer>
+<p>Powered by <a href="https://github.com/raspbeguy/pigo">pigo</a> {{ .version }}</p>
+</footer>
+</body>
+</html>

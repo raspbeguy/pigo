@@ -1,0 +1,5 @@
+body{font-family:system-ui,sans-serif;max-width:48rem;margin:2rem auto;padding:0 1rem;line-height:1.6}
+header nav ul{list-style:none;padding:0;display:flex;gap:1rem;flex-wrap:wrap}
+.page-nav{display:flex;justify-content:space-between;margin-top:2rem}
+pre,code{font-family:ui-monospace,Menlo,monospace}
+pre{background:#f6f8fa;padding:.75rem;overflow:auto;border-radius:.25rem}

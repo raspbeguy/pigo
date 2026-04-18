@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>{% if meta.title %}{{ meta.title }} | {% endif %}{{ site_title }}</title>
+{% if meta.description %}<meta name="description" content="{{ meta.description }}">{% endif %}
+<link rel="stylesheet" href="{{ theme_url }}/style.css">
+</head>
+<body>
+<header>
+<h1><a href="{{ base_url }}">{{ site_title }}</a></h1>
+<nav>
+<ul>
+{% for page in pages %}
+{% if not page.hidden %}<li><a href="{{ page.url }}">{{ page.title ?: page.id }}</a></li>{% endif %}
+{% endfor %}
+</ul>
+</nav>
+</header>
+<main>
+<article>
+{% if meta.title %}<h2>{{ meta.title }}</h2>{% endif %}
+{% if meta.date_formatted %}<time datetime="{{ meta.date }}">{{ meta.date_formatted }}</time>{% endif %}
+{{ content|raw }}
+</article>
+<nav class="page-nav">
+{% if previous_page %}<a rel="prev" href="{{ previous_page.url }}">&larr; {{ previous_page.title }}</a>{% endif %}
+{% if next_page %}<a rel="next" href="{{ next_page.url }}">{{ next_page.title }} &rarr;</a>{% endif %}
+</nav>
+</main>
+<footer>
+<p>Powered by <a href="https://github.com/raspbeguy/pigo">pigo</a> {{ version }}</p>
+</footer>
+</body>
+</html>

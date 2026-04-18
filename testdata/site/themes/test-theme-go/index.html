@@ -1,0 +1,6 @@
+TITLE:{{ .meta.title }}
+SITE:{{ .site_title }}
+BASE:{{ .base_url }}
+URL:{{ .current_page.url }}
+CONTENT:{{ .content }}
+PAGES:{{ range .pages }}{{ .id }},{{ end }}

@@ -1,0 +1,4 @@
+name: pigo default (go html/template)
+description: Minimal default html/template theme shipped with pigo.
+version: 0.1.0
+api_version: 3
