@@ -55,8 +55,32 @@ func NewGoRenderer(themeDir string, filters *Filters) (*GoRenderer, error) {
 		"map": func(items any, keyPath string) []any {
 			return filters.MapFilter(coerceSlice(items), keyPath)
 		},
-		"url_param":  filters.URLParam,
-		"form_param": filters.FormParam,
+		"url_param": func(name string, rest ...any) any {
+			filter := ""
+			var def any
+			if len(rest) >= 1 {
+				if s, ok := rest[0].(string); ok {
+					filter = s
+				}
+			}
+			if len(rest) >= 2 {
+				def = rest[1]
+			}
+			return filters.URLParam(name, filter, def)
+		},
+		"form_param": func(name string, rest ...any) any {
+			filter := ""
+			var def any
+			if len(rest) >= 1 {
+				if s, ok := rest[0].(string); ok {
+					filter = s
+				}
+			}
+			if len(rest) >= 2 {
+				def = rest[1]
+			}
+			return filters.FormParam(name, filter, def)
+		},
 		"pages": func(args ...any) []map[string]any {
 			start, depth, depthOffset, offset := "", 0, 0, 1
 			if len(args) >= 1 {

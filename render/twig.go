@@ -77,16 +77,12 @@ func (r *TwigRenderer) registerPicoFilters() {
 	}
 
 	r.env.Functions["url_param"] = func(ctx stick.Context, args ...stick.Value) stick.Value {
-		if len(args) == 0 {
-			return ""
-		}
-		return f.URLParam(stick.CoerceString(args[0]))
+		name, filter, def := paramArgs(args)
+		return f.URLParam(name, filter, def)
 	}
 	r.env.Functions["form_param"] = func(ctx stick.Context, args ...stick.Value) stick.Value {
-		if len(args) == 0 {
-			return ""
-		}
-		return f.FormParam(stick.CoerceString(args[0]))
+		name, filter, def := paramArgs(args)
+		return f.FormParam(name, filter, def)
 	}
 	r.env.Functions["pages"] = func(ctx stick.Context, args ...stick.Value) stick.Value {
 		start := ""
@@ -107,6 +103,21 @@ func (r *TwigRenderer) registerPicoFilters() {
 		}
 		return f.PagesQuery(start, depth, depthOffset, offset)
 	}
+}
+
+// paramArgs unpacks (name, filter, default) from a url_param/form_param call.
+// Mirrors Pico's signature: url_param(name, filter='', default=null).
+func paramArgs(args []stick.Value) (name, filter string, def any) {
+	if len(args) >= 1 {
+		name = stick.CoerceString(args[0])
+	}
+	if len(args) >= 2 {
+		filter = stick.CoerceString(args[1])
+	}
+	if len(args) >= 3 {
+		def = args[2]
+	}
+	return
 }
 
 // Render executes the named template (without extension — ".twig" is appended).

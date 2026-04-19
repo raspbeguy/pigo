@@ -6,6 +6,7 @@ package render
 import (
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/raspbeguy/pigo/content"
@@ -174,21 +175,57 @@ func (f *Filters) MapFilter(items []any, keyPath string) []any {
 	return out
 }
 
-// URLParam returns the first GET query param matching name, or "".
-func (f *Filters) URLParam(name string) string {
+// URLParam returns the named GET query param, applying an optional Pico-style
+// filter (e.g. "int"), and falling back to def when the param is missing or
+// empty. Mirrors Pico's Pico::getUrlParameter($name, $filter, $default).
+func (f *Filters) URLParam(name, filter string, def any) any {
 	if f.Req == nil {
-		return ""
+		return def
 	}
-	return f.Req.URL.Query().Get(name)
+	raw := f.Req.URL.Query().Get(name)
+	return applyParamFilter(raw, filter, def)
 }
 
-// FormParam returns the first POST form param matching name, or "".
-func (f *Filters) FormParam(name string) string {
+// FormParam returns the named POST form param with the same filter/default
+// semantics as URLParam.
+func (f *Filters) FormParam(name, filter string, def any) any {
 	if f.Req == nil {
-		return ""
+		return def
 	}
 	_ = f.Req.ParseForm()
-	return f.Req.PostFormValue(name)
+	raw := f.Req.PostFormValue(name)
+	return applyParamFilter(raw, filter, def)
+}
+
+// applyParamFilter mirrors the subset of PHP filter_var Pico exposes through
+// url_param/form_param: empty input returns def; "int" coerces to int64 and
+// falls back to def on parse failure; anything else is returned as the raw
+// string.
+func applyParamFilter(raw, filter string, def any) any {
+	if raw == "" {
+		return def
+	}
+	switch filter {
+	case "int", "integer":
+		if n, err := strconv.ParseInt(raw, 10, 64); err == nil {
+			return n
+		}
+		return def
+	case "float", "double":
+		if n, err := strconv.ParseFloat(raw, 64); err == nil {
+			return n
+		}
+		return def
+	case "bool", "boolean":
+		switch strings.ToLower(raw) {
+		case "1", "true", "yes", "on":
+			return true
+		case "0", "false", "no", "off", "":
+			return false
+		}
+		return def
+	}
+	return raw
 }
 
 // PagesQuery mirrors Pico's pages(start, depth, depthOffset, offset) function.
