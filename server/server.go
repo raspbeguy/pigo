@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/raspbeguy/pigo/config"
 	"github.com/raspbeguy/pigo/content"
@@ -119,6 +120,18 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 		}
 	}
 	if !ok {
+		// Root-level static file fallback: Pico's convention is that
+		// favicon.ico, robots.txt, google-verify tokens and similar live
+		// at the site root and are served as plain files. Try that
+		// before falling through to the 404 page.
+		if reqPath != "" {
+			if staticPath, safe := resolveRootStatic(d.RootDir, reqPath); safe {
+				if info, err := os.Stat(staticPath); err == nil && !info.IsDir() {
+					http.ServeFile(w, r, staticPath)
+					return
+				}
+			}
+		}
 		_ = d.Dispatcher.Dispatch(plugin.On404ContentLoading)
 		errPage, _ := d.Scanner.LoadErrorPage(reqPath)
 		if errPage == nil {
@@ -256,6 +269,26 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 func dirExists(p string) bool {
 	info, err := os.Stat(p)
 	return err == nil && info.IsDir()
+}
+
+// resolveRootStatic joins rootDir with the request path and verifies the
+// result stays within rootDir (defends against "../" traversal). Returns
+// the joined path and whether it's safe to serve.
+func resolveRootStatic(rootDir, reqPath string) (string, bool) {
+	rootAbs, err := filepath.Abs(rootDir)
+	if err != nil {
+		return "", false
+	}
+	joined := filepath.Join(rootAbs, filepath.FromSlash(reqPath))
+	resolved, err := filepath.Abs(joined)
+	if err != nil {
+		return "", false
+	}
+	rootWithSep := rootAbs + string(filepath.Separator)
+	if resolved != rootAbs && !strings.HasPrefix(resolved, rootWithSep) {
+		return "", false
+	}
+	return resolved, true
 }
 
 func firstNonEmpty(s ...string) string {
