@@ -10,6 +10,7 @@ package pigo
 
 import (
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -35,6 +36,7 @@ type Options struct {
 	AssetsDir  string // Override assets dir (default: RootDir/assets).
 	Plugins    []plugin.Plugin
 	MountPath  string // URL prefix (e.g. "/pico") when hosting under a sub-path.
+	Logger     *slog.Logger // nil → slog.Default().
 }
 
 // Site is a live pigo instance, reloadable via Reload().
@@ -50,7 +52,11 @@ type Site struct {
 	twigRegistrar *render.TwigRegistrar
 	contentDir    string
 	themeDir      string
+	logger        *slog.Logger
 }
+
+// Logger returns the site's structured logger.
+func (s *Site) Logger() *slog.Logger { return s.logger }
 
 // New builds a Site, loading config and scanning content.
 func New(opts Options) (*Site, error) {
@@ -91,7 +97,11 @@ func New(opts Options) (*Site, error) {
 		return nil, err
 	}
 
-	s := &Site{opts: opts, cfg: cfg, dispatcher: dispatcher}
+	lg := opts.Logger
+	if lg == nil {
+		lg = slog.Default()
+	}
+	s := &Site{opts: opts, cfg: cfg, dispatcher: dispatcher, logger: lg}
 
 	// Resolve content dir.
 	s.contentDir = opts.ContentDir
@@ -249,6 +259,7 @@ func (s *Site) Handler() http.Handler {
 		Dispatcher:    s.dispatcher,
 		TwigRegistrar: s.twigRegistrar,
 		Version:       Version,
+		Logger:        s.logger,
 	})
 }
 

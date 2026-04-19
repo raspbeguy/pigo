@@ -5,6 +5,7 @@
 package server
 
 import (
+	"log/slog"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -19,7 +20,8 @@ import (
 )
 
 // Deps is the server's dependency bundle. All fields are required except
-// TwigRegistrar (nil falls back to an empty registrar).
+// TwigRegistrar (nil falls back to an empty registrar) and Logger (nil
+// falls back to slog.Default()).
 type Deps struct {
 	Config        *config.Config
 	ContentDir    string
@@ -36,10 +38,14 @@ type Deps struct {
 	Dispatcher    *plugin.Dispatcher
 	TwigRegistrar *render.TwigRegistrar
 	Version       string
+	Logger        *slog.Logger
 }
 
 // New returns an http.Handler that serves the site.
 func New(d *Deps) http.Handler {
+	if d.Logger == nil {
+		d.Logger = slog.Default()
+	}
 	mux := http.NewServeMux()
 
 	// Static asset serving: /assets/, /themes/, /plugins/
@@ -64,7 +70,7 @@ func New(d *Deps) http.Handler {
 		handlePage(w, r, d, assetsDir)
 	})
 
-	return mux
+	return accessLog(d.Logger, mux)
 }
 
 func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir string) {
@@ -101,6 +107,7 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 		_ = d.Dispatcher.Dispatch(plugin.OnContentLoading)
 		p, err := d.Scanner.Load(filePath, router.IDFromPath(d.ContentDir, filePath, d.Config.ContentExt))
 		if err != nil {
+			d.Logger.Error("content load failed", "path", r.URL.Path, "file", filePath, "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -192,6 +199,7 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 	_ = d.Dispatcher.Dispatch(plugin.OnContentPrepared, &substituted)
 	html, err := d.Markdown.Render(substituted)
 	if err != nil {
+		d.Logger.Error("markdown render failed", "path", r.URL.Path, "page", page.ID, "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -235,6 +243,7 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 	case "go", "gotmpl", "html":
 		r2, err := render.NewGoRenderer(d.ThemeDir, filters)
 		if err != nil {
+			d.Logger.Error("go-template setup failed", "path", r.URL.Path, "theme_dir", d.ThemeDir, "err", err)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
@@ -252,6 +261,7 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 
 	body, err := renderer.Render(tmplName, ctx)
 	if err != nil {
+		d.Logger.Error("template render failed", "path", r.URL.Path, "template", tmplName, "err", err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

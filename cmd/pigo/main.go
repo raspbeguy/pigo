@@ -17,10 +17,13 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
+	"log/slog"
 	"os"
+	"path/filepath"
 
 	"github.com/raspbeguy/pigo"
+	"github.com/raspbeguy/pigo/config"
+	"github.com/raspbeguy/pigo/logging"
 	"github.com/raspbeguy/pigo/plugin"
 
 	// Blank imports register the shipped plugins in the global registry.
@@ -37,6 +40,8 @@ func main() {
 		assets      = flag.String("assets", "", "assets dir (default: <root>/assets)")
 		addr        = flag.String("addr", ":8080", "HTTP listen address")
 		listPlugins = flag.Bool("list-plugins", false, "print registered plugin names and exit")
+		logLevel    = flag.String("log-level", "", "log level: debug|info|warn|error (default info; env PIGO_LOG_LEVEL, config log_level)")
+		logFormat   = flag.String("log-format", "", "log format: text|json (default text; env PIGO_LOG_FORMAT, config log_format)")
 	)
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "pigo %s — Go port of Pico\n\nUsage: %s [flags]\n\n", pigo.Version, os.Args[0])
@@ -51,18 +56,40 @@ func main() {
 		return
 	}
 
+	// Load the site config once up front so log_level / log_format can feed
+	// into the logger. pigo.New will reload it internally; that's fine —
+	// config.Load is deterministic and cheap.
+	configDir := *cfgDir
+	if configDir == "" {
+		configDir = filepath.Join(*root, "config")
+	}
+	var logCfg map[string]any
+	if cfg, err := config.Load(configDir); err == nil {
+		logCfg = cfg.AsMap()
+	}
+	logger, err := logging.New(logging.Resolve(logLevel, logFormat, logCfg))
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(2)
+	}
+	slog.SetDefault(logger)
+
 	site, err := pigo.New(pigo.Options{
 		RootDir:    *root,
 		ConfigDir:  *cfgDir,
 		ContentDir: *contentD,
 		ThemesDir:  *themes,
 		AssetsDir:  *assets,
+		Logger:     logger,
 	})
 	if err != nil {
-		log.Fatalf("pigo: %v", err)
+		logger.Error("site init failed", "err", err)
+		os.Exit(1)
 	}
-	log.Printf("pigo %s listening on %s", pigo.Version, *addr)
+	logger.Info("pigo listening", "version", pigo.Version, "addr", *addr)
 	if err := site.ListenAndServe(*addr); err != nil {
-		log.Fatalf("pigo: %v", err)
+		logger.Error("listen failed", "addr", *addr, "err", err)
+		os.Exit(1)
 	}
 }
+

@@ -10,3 +10,5 @@ require (
 )
 
 require github.com/shopspring/decimal v1.3.1 // indirect
+
+replace github.com/tyler-sommer/stick => /home/alpine/repo/stick

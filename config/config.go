@@ -42,6 +42,8 @@ type Config struct {
 	AssetsURL      string         `yaml:"assets_url"`
 	PluginsURL     string         `yaml:"plugins_url"`
 	TemplateEngine string         `yaml:"template_engine"` // "twig" or "go"; pigo extension
+	LogLevel       string         `yaml:"log_level"`       // debug|info|warn|error; pigo extension
+	LogFormat      string         `yaml:"log_format"`      // text|json; pigo extension
 
 	// Plugins lists plugins to enable for this site by registered name. At
 	// Site init, pigo resolves each name against the in-process plugin
@@ -220,6 +222,12 @@ func (c *Config) merge(src *Config) {
 			c.TemplateEngine = src.TemplateEngine
 		}
 	}
+	if c.LogLevel == "" {
+		c.LogLevel = src.LogLevel
+	}
+	if c.LogFormat == "" {
+		c.LogFormat = src.LogFormat
+	}
 	// First file wins for the plugins list — subsequent files are ignored
 	// rather than appended, matching the first-value-wins merge style used
 	// throughout this function.
@@ -280,6 +288,8 @@ func (c *Config) AsMap() map[string]any {
 		"assets_url":          c.AssetsURL,
 		"plugins_url":         c.PluginsURL,
 		"template_engine":     c.TemplateEngine,
+		"log_level":           c.LogLevel,
+		"log_format":          c.LogFormat,
 	}
 	for k, v := range c.Custom {
 		if _, exists := out[k]; !exists {
