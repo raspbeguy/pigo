@@ -12,6 +12,7 @@ import (
 	"github.com/raspbeguy/pigo/content"
 	"github.com/raspbeguy/pigo/router"
 	"github.com/raspbeguy/pigo/tree"
+	"github.com/tyler-sommer/stick"
 )
 
 // Filters holds state needed by Pico-compatible template filters/functions.
@@ -39,13 +40,16 @@ func BuildContext(
 	meta map[string]any,
 	content string,
 ) map[string]any {
-	// Pages is emitted as an ordered []any so {% for p in pages %} yields the
-	// configured sort order. A separate pages_by_id map supports direct lookup.
-	pagesList := make([]any, 0, len(pages))
+	// Pico's $pages is a string-keyed associative array (id → page). PHP
+	// preserves insertion order, so iteration yields the configured sort
+	// order AND {% set p = pages[id] %} does a direct lookup. Match that
+	// with stick.Hash; Go slices would break the id-lookup form and Go
+	// maps would lose the sort order.
+	pagesHash := stick.NewHash(len(pages))
 	pagesByID := make(map[string]any, len(pages))
 	for _, p := range pages {
 		m := p.AsMap()
-		pagesList = append(pagesList, m)
+		pagesHash.Set(p.ID, m)
 		pagesByID[p.ID] = m
 	}
 	return map[string]any{
@@ -59,7 +63,7 @@ func BuildContext(
 		"version":       version,
 		"meta":          meta,
 		"content":       content,
-		"pages":         pagesList,
+		"pages":         pagesHash,
 		"pages_by_id":   pagesByID,
 		"current_page":  currentPage.AsMap(),
 		"previous_page": prevPage.AsMap(),

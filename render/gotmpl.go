@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/tyler-sommer/stick"
 )
 
 // GoRenderer uses Go's html/template package. Selectable via
@@ -142,6 +144,19 @@ func (r *GoRenderer) Render(name string, ctx map[string]any) ([]byte, error) {
 	// content as template.HTML.
 	ctx2 := make(map[string]any, len(ctx))
 	for k, v := range ctx {
+		// html/template can't range over a *stick.Hash (struct). Expose
+		// any Hash as a []any in insertion order for the Go-template
+		// engine. Twig-side, Hash is iterated natively.
+		if h, ok := v.(*stick.Hash); ok {
+			keys := h.Keys()
+			out := make([]any, 0, len(keys))
+			for _, k := range keys {
+				val, _ := h.Get(k)
+				out = append(out, val)
+			}
+			ctx2[k] = out
+			continue
+		}
 		ctx2[k] = v
 	}
 	if html, ok := ctx["content"].(string); ok {
