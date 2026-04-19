@@ -141,6 +141,13 @@ the existing API shape; purely additive.
 
 ---
 
+## Upstream stick PRs
+
+Seven independent gaps were surfaced and patched while porting the
+hashtagueule Pico site. Branches + drafts live in the scratch clone at
+`/home/alpine/repo/stick/`. See [`upstream-stick-prs.md`](upstream-stick-prs.md)
+for the full roster, branch names, and how to file/push them.
+
 ## Go `html/template` registrar
 
 Only the Twig engine currently lets plugins register their own template
