@@ -12,10 +12,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Pigo depends on stick features merged to main but not yet in a
+      # tagged release (CoerceBool for collections, max/min). Check out
+      # main directly and inject a replace; drop this once a tag is cut
+      # and go.mod is bumped.
+      - name: Checkout stick (upstream main)
+        uses: actions/checkout@v4
+        with:
+          repository: tyler-sommer/stick
+          ref: main
+          path: .stick
+
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
           go-version: '1.26'
+
+      - name: Replace stick with main checkout
+        run: go mod edit -replace github.com/tyler-sommer/stick=./.stick
 
       - name: Vet
         run: go vet ./...
