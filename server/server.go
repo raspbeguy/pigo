@@ -20,9 +20,12 @@ import (
 	"github.com/raspbeguy/pigo/tree"
 )
 
-// Deps is the server's dependency bundle. All fields are required except
-// TwigRegistrar (nil falls back to an empty registrar) and Logger (nil
-// falls back to slog.Default()).
+// Deps is the server's dependency bundle. Every field is required except
+// TwigRegistrar (nil is treated as an empty registrar). In particular
+// Logger must be non-nil — the per-request paths dereference it without
+// guarding. pigo.Site.Handler is the canonical constructor and always
+// supplies one; direct Deps consumers (tests, embeddings) should pass
+// slog.Default() if nothing else.
 type Deps struct {
 	Config        *config.Config
 	ContentDir    string
@@ -42,10 +45,11 @@ type Deps struct {
 	Logger        *slog.Logger
 }
 
-// New returns an http.Handler that serves the site.
+// New returns an http.Handler that serves the site. Panics if
+// d.Logger is nil; see Deps for the contract.
 func New(d *Deps) http.Handler {
 	if d.Logger == nil {
-		d.Logger = slog.Default()
+		panic("server.New: Deps.Logger is required (pass slog.Default() if unsure)")
 	}
 	mux := http.NewServeMux()
 
