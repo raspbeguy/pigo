@@ -25,6 +25,14 @@ Flags:
 - `--root` — site root containing `config/`, `content/`, `themes/`.
 - `--config`, `--content`, `--themes`, `--assets` — override individual dirs.
 - `--addr` — HTTP listen address (default `:8080`).
+- `--log-level` — `debug` | `info` | `warn` | `error` (default `info`). Also
+  settable via `PIGO_LOG_LEVEL` env or `log_level` in `config/*.yml`.
+- `--log-format` — `text` (logfmt-style, default) or `json`. Also settable via
+  `PIGO_LOG_FORMAT` env or `log_format` in `config/*.yml`.
+
+Precedence: flag > env > config > default. One structured `request` line is
+emitted per HTTP response at `info` level; 500s emit an additional `error`
+line with the request path and cause.
 
 ## Template engines
 
@@ -53,9 +61,11 @@ under identical names:
 ## Template variables
 
 Matches Pico: `site_title`, `base_url`, `theme_url`, `themes_url`, `assets_url`,
-`plugins_url`, `version`, `config`, `meta`, `content`, `pages` (ordered slice),
-`pages_by_id` (map lookup), `current_page`, `previous_page`, `next_page`,
-`page_tree`.
+`plugins_url`, `version`, `config`, `meta`, `content`, `pages` (string-keyed
+by page id, iterates in the configured sort order — `{% for p in pages %}` and
+`pages[id]` both work, just like Pico's PHP `$pages`), `pages_by_id` (alias of
+`pages`, retained for templates that reference it by name), `current_page`,
+`previous_page`, `next_page`, `page_tree`.
 
 ## Meta headers
 
@@ -113,13 +123,15 @@ research and why each was deferred.
    the Go template engine and author a theme there.
 4. For any Pico PHP plugin, port to Go using the same event names.
 
+Root-level files (`favicon.ico`, `robots.txt`, Google site-verification tokens,
+etc.) placed directly in `--root/` are served as static files after content
+lookup fails and before the 404 page. No separate webserver needed.
+
 ## Known divergences from Pico
 
 - Plugins must be Go, not PHP.
 - Twig support via stick is ~Twig 1.x; a few advanced PHP-Twig features
   (e.g. some filter edge cases) may not be identical.
-- `pages` is exposed as an ordered slice rather than an ordered associative
-  array; use `pages_by_id` for direct id lookup.
 - Markdown is rendered by [goldmark](https://github.com/yuin/goldmark) instead
   of Parsedown Extra — output should be ~identical, but minor whitespace
   differences are possible.
