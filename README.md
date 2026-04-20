@@ -9,8 +9,14 @@ sites on maintained software.
 
 ## Status
 
-Early. Core rendering works (both engines), unit + integration tests pass.
-Plugins require a Go port — PHP plugins cannot be loaded.
+**Early development — everything can change.** Config keys, CLI flags, plugin
+lifecycle events, exported Go APIs, the router's request-path semantics, the
+template context shape — treat all of it as unstable until a tagged release
+cuts. Pin a specific commit if you're building on pigo, and expect to
+revisit that pin regularly.
+
+Core rendering works (both engines), unit + integration tests pass. Plugins
+require a Go port — PHP plugins cannot be loaded.
 
 ## Install / run
 
@@ -25,6 +31,7 @@ Flags:
 - `--root` — site root containing `config/`, `content/`, `themes/`.
 - `--config`, `--content`, `--themes`, `--assets` — override individual dirs.
 - `--addr` — HTTP listen address (default `:8080`).
+- `--list-plugins` — print the plugins this binary knows about and exit.
 - `--log-level` — `debug` | `info` | `warn` | `error` (default `info`). Also
   settable via `PIGO_LOG_LEVEL` env or `log_level` in `config/*.yml`.
 - `--log-format` — `text` (logfmt-style, default) or `json`. Also settable via
@@ -125,7 +132,11 @@ research and why each was deferred.
 
 Root-level files (`favicon.ico`, `robots.txt`, Google site-verification tokens,
 etc.) placed directly in `--root/` are served as static files after content
-lookup fails and before the 404 page. No separate webserver needed.
+lookup fails and before the 404 page. No separate webserver needed. Pico's
+`.htaccess` deny rules are mirrored: `config/`, `content/`, `content-sample/`,
+`lib/`, `plugins/`, `vendor/`, `.git/`, and any dotfile path (except
+`.well-known/`) always 404 — raw markdown, site config, and dependency
+sources are never exposed.
 
 In production behind nginx/Apache, set `serve_root_static: false` in
 `config/config.yml` so the webserver in front handles static files directly —
