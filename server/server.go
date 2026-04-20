@@ -129,9 +129,11 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 	if !ok {
 		// Root-level static file fallback: Pico's convention is that
 		// favicon.ico, robots.txt, google-verify tokens and similar live
-		// at the site root and are served as plain files. Try that
-		// before falling through to the 404 page.
-		if reqPath != "" {
+		// at the site root and are served as plain files. Mirror Pico's
+		// .htaccess rules: deny config/content/vendor/.git/etc. and
+		// dotfile paths (except .well-known/), then serve whatever's
+		// left.
+		if reqPath != "" && !staticBlocked(reqPath) {
 			if staticPath, safe := resolveRootStatic(d.RootDir, reqPath); safe {
 				if info, err := os.Stat(staticPath); err == nil && !info.IsDir() {
 					http.ServeFile(w, r, staticPath)
@@ -279,6 +281,49 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 func dirExists(p string) bool {
 	info, err := os.Stat(p)
 	return err == nil && info.IsDir()
+}
+
+// staticBlockedDirs lists the directories pigo refuses to serve as static
+// files, matching Pico's .htaccess:
+//
+//	RewriteRule ^(\.git|config|content-sample|content|lib|vendor)(/|$) - [R=404,L]
+//
+// plus `plugins` (Pico 2.x renamed lib → plugins; pigo's own plugins/ dir
+// is already served under /plugins/ with its own file server, so blocking
+// it at the root-static layer is correct).
+var staticBlockedDirs = []string{
+	".git",
+	"config",
+	"content",
+	"content-sample",
+	"lib",
+	"plugins",
+	"vendor",
+}
+
+// staticBlocked reports whether reqPath is a Pico-style denied path.
+// Denies anything under the blocked dirs and any dotfile path — except
+// .well-known/ (Let's Encrypt, security.txt).
+func staticBlocked(reqPath string) bool {
+	for _, d := range staticBlockedDirs {
+		if reqPath == d || strings.HasPrefix(reqPath, d+"/") {
+			return true
+		}
+	}
+	// Dotfile paths: allow .well-known/..., deny the rest.
+	if strings.HasPrefix(reqPath, ".well-known/") || reqPath == ".well-known" {
+		return false
+	}
+	if strings.HasPrefix(reqPath, ".") {
+		return true
+	}
+	// Also deny any segment starting with a dot (/foo/.secret).
+	for _, seg := range strings.Split(reqPath, "/") {
+		if strings.HasPrefix(seg, ".") {
+			return true
+		}
+	}
+	return false
 }
 
 // resolveRootStatic joins rootDir with the request path and verifies the
