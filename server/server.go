@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/raspbeguy/pigo/config"
@@ -75,7 +76,7 @@ func New(d *Deps) http.Handler {
 
 func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir string) {
 	reqPath := router.EvaluateRequestURL(r, d.MountPath)
-	_ = d.Dispatcher.Dispatch(plugin.OnRequestURL, &reqPath)
+	dispatchLog(d.Logger, "OnRequestURL", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnRequestURL, &reqPath))
 
 	filePath, ok := router.ResolveFilePath(d.ContentDir, reqPath, d.Config.ContentExt)
 	// Even when no file was found, give the plugin a candidate path derived
@@ -88,7 +89,7 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 			filePath = filepath.Join(d.ContentDir, reqPath+d.Config.ContentExt)
 		}
 	}
-	_ = d.Dispatcher.Dispatch(plugin.OnRequestFile, &filePath)
+	dispatchLog(d.Logger, "OnRequestFile", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnRequestFile, &filePath))
 
 	// Honor plugin-mutated filePath: if the plugin pointed filePath at a
 	// real file (typical for prefix-stripping or alias plugins), accept it.
@@ -104,11 +105,11 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 	var page *content.Page
 	status := http.StatusOK
 	if ok {
-		_ = d.Dispatcher.Dispatch(plugin.OnContentLoading)
+		dispatchLog(d.Logger, "OnContentLoading", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnContentLoading))
 		p, err := d.Scanner.Load(filePath, router.IDFromPath(d.ContentDir, filePath, d.Config.ContentExt))
 		if err != nil {
-			d.Logger.Error("content load failed", "path", r.URL.Path, "file", filePath, "err", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			respondError(w, d.Logger, http.StatusInternalServerError,
+				"content load failed", "path", r.URL.Path, "file", filePath, "err", err)
 			return
 		}
 		if p == nil {
@@ -123,7 +124,7 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 				canonical.ModificationTime = page.ModificationTime
 				page = canonical
 			}
-			_ = d.Dispatcher.Dispatch(plugin.OnContentLoaded, &page.RawContent)
+			dispatchLog(d.Logger, "OnContentLoaded", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnContentLoaded, &page.RawContent))
 		}
 	}
 	if !ok {
@@ -146,7 +147,7 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 				}
 			}
 		}
-		_ = d.Dispatcher.Dispatch(plugin.On404ContentLoading)
+		dispatchLog(d.Logger, "On404ContentLoading", r.URL.Path, d.Dispatcher.Dispatch(plugin.On404ContentLoading))
 		errPage, _ := d.Scanner.LoadErrorPage(reqPath)
 		if errPage == nil {
 			errPage = &content.Page{
@@ -158,7 +159,7 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 		}
 		page = errPage
 		status = http.StatusNotFound
-		_ = d.Dispatcher.Dispatch(plugin.On404ContentLoaded, &page.RawContent)
+		dispatchLog(d.Logger, "On404ContentLoaded", r.URL.Path, d.Dispatcher.Dispatch(plugin.On404ContentLoaded, &page.RawContent))
 	}
 
 	// Build URL placeholders.
@@ -196,21 +197,21 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 
 	// OnCurrentPageDiscovered fires once the canonical page (including its
 	// prev/next chain) is identified.
-	_ = d.Dispatcher.Dispatch(plugin.OnCurrentPageDiscovered, page, page.PrevPage, page.NextPage)
+	dispatchLog(d.Logger, "OnCurrentPageDiscovered", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnCurrentPageDiscovered, page, page.PrevPage, page.NextPage))
 
 	// OnContentParsing: raw content, before any substitution or markdown.
-	_ = d.Dispatcher.Dispatch(plugin.OnContentParsing, &page.RawContent)
+	dispatchLog(d.Logger, "OnContentParsing", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnContentParsing, &page.RawContent))
 
 	// Pre-render content for the current page.
 	substituted := placeholders.Substitute(page.RawContent)
-	_ = d.Dispatcher.Dispatch(plugin.OnContentPrepared, &substituted)
+	dispatchLog(d.Logger, "OnContentPrepared", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnContentPrepared, &substituted))
 	html, err := d.Markdown.Render(substituted)
 	if err != nil {
-		d.Logger.Error("markdown render failed", "path", r.URL.Path, "page", page.ID, "err", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		respondError(w, d.Logger, http.StatusInternalServerError,
+			"markdown render failed", "path", r.URL.Path, "page", page.ID, "err", err)
 		return
 	}
-	_ = d.Dispatcher.Dispatch(plugin.OnContentParsed, &html)
+	dispatchLog(d.Logger, "OnContentParsed", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnContentParsed, &html))
 	page.Content = html
 
 	// Build render filters and context.
@@ -240,7 +241,8 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 	// plugin state.
 	ctx["request_url"] = reqPath
 
-	// Pick template engine.
+	// Pick template engine. Unknown values fall through to twig with a
+	// warn-level log so operators notice config typos.
 	engine := d.Config.TemplateEngine
 	if engine == "" {
 		engine = "twig"
@@ -250,12 +252,16 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 	case "go", "gotmpl", "html":
 		r2, err := render.NewGoRenderer(d.ThemeDir, filters)
 		if err != nil {
-			d.Logger.Error("go-template setup failed", "path", r.URL.Path, "theme_dir", d.ThemeDir, "err", err)
-			http.Error(w, err.Error(), http.StatusInternalServerError)
+			respondError(w, d.Logger, http.StatusInternalServerError,
+				"go-template setup failed", "path", r.URL.Path, "theme_dir", d.ThemeDir, "err", err)
 			return
 		}
 		renderer = r2
+	case "twig":
+		renderer = render.NewTwigRenderer(d.ThemeDir, filters, d.TwigRegistrar)
 	default:
+		d.Logger.Warn("unknown template_engine, falling back to twig",
+			"template_engine", engine, "path", r.URL.Path)
 		renderer = render.NewTwigRenderer(d.ThemeDir, filters, d.TwigRegistrar)
 	}
 
@@ -264,21 +270,25 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 	if v, ok := page.Meta["template"].(string); ok && v != "" {
 		tmplName = v
 	}
-	_ = d.Dispatcher.Dispatch(plugin.OnPageRendering, &tmplName, &ctx, w.Header(), &status)
+	dispatchLog(d.Logger, "OnPageRendering", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnPageRendering, &tmplName, &ctx, w.Header(), &status))
 
 	body, err := renderer.Render(tmplName, ctx)
 	if err != nil {
-		d.Logger.Error("template render failed", "path", r.URL.Path, "template", tmplName, "err", err)
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		respondError(w, d.Logger, http.StatusInternalServerError,
+			"template render failed", "path", r.URL.Path, "template", tmplName, "err", err)
 		return
 	}
-	_ = d.Dispatcher.Dispatch(plugin.OnPageRendered, &body, w.Header(), &status)
+	dispatchLog(d.Logger, "OnPageRendered", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnPageRendered, &body, w.Header(), &status))
 
 	// Default Content-Type only if no plugin already set one (so e.g. a
 	// robots.txt plugin can emit text/plain).
 	if w.Header().Get("Content-Type") == "" {
 		w.Header().Set("Content-Type", "text/html; charset=utf-8")
 	}
+	// Body is fully rendered into []byte, so the length is known up
+	// front — setting Content-Length lets intermediaries size-budget
+	// and skips chunked encoding.
+	w.Header().Set("Content-Length", strconv.Itoa(len(body)))
 	w.WriteHeader(status)
 	_, _ = w.Write(body)
 }
