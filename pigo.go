@@ -26,7 +26,9 @@ import (
 )
 
 // Version is the pigo release string. Exposed to templates as {{ version }}.
-const Version = "0.1.0"
+// Declared as var (not const) so release builds can overwrite it via
+// `-ldflags "-X github.com/raspbeguy/pigo.Version=<tag>"`.
+var Version = "0.1.0"
 
 // Options configures a pigo site. RootDir is the only required field.
 type Options struct {
