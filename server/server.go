@@ -117,12 +117,17 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 			ok = false
 		} else {
 			page = p
-			// Replace with canonical entry from scanner output so prev/next chains link.
-			if canonical, ok := d.PageByID[page.ID]; ok {
-				canonical.RawContent = page.RawContent
-				canonical.Meta = page.Meta
-				canonical.ModificationTime = page.ModificationTime
-				page = canonical
+			// Splice in the canonical PrevPage/NextPage chain (built at
+			// load time) without mutating the canonical entry — two
+			// concurrent requests would otherwise race on
+			// RawContent/Meta/ModificationTime writes into the shared
+			// *content.Page.
+			if canonical, found := d.PageByID[page.ID]; found {
+				fresh := *canonical
+				fresh.RawContent = page.RawContent
+				fresh.Meta = page.Meta
+				fresh.ModificationTime = page.ModificationTime
+				page = &fresh
 			}
 			dispatchLog(d.Logger, "OnContentLoaded", r.URL.Path, d.Dispatcher.Dispatch(plugin.OnContentLoaded, &page.RawContent))
 		}
