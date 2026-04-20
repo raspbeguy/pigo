@@ -1,0 +1,610 @@
+{
+  "events": {
+    "source_pico": "lib/Pico.php",
+    "source_pigo": "plugin/events.go",
+    "pico": [
+      "onPluginsLoaded",
+      "onConfigLoaded",
+      "onThemeLoading",
+      "onRequestUrl",
+      "onRequestFile",
+      "onContentLoading",
+      "on404ContentLoading",
+      "on404ContentLoaded",
+      "onContentLoaded",
+      "onMetaParsing",
+      "onMetaParsed",
+      "onContentParsing",
+      "onContentPrepared",
+      "onContentParsed",
+      "onPagesLoading",
+      "onPagesDiscovered",
+      "onPagesLoaded",
+      "onPageTreeBuilt",
+      "onPageRendering",
+      "onPageRendered",
+      "onPluginManuallyLoaded",
+      "onMetaHeaders",
+      "onYamlParserRegistered",
+      "onParsedownRegistered",
+      "onSinglePageLoading",
+      "onSinglePageContent",
+      "onSinglePageLoaded",
+      "onTwigRegistered"
+    ],
+    "pigo": [
+      "onPluginsLoaded",
+      "onPluginManuallyLoaded",
+      "onConfigLoaded",
+      "onThemeLoading",
+      "onThemeLoaded",
+      "onRequestUrl",
+      "onRequestFile",
+      "onContentLoading",
+      "on404ContentLoading",
+      "on404ContentLoaded",
+      "onContentLoaded",
+      "onMetaParsing",
+      "onMetaParsed",
+      "onMetaHeaders",
+      "onContentParsing",
+      "onContentPrepared",
+      "onContentParsed",
+      "onPagesLoading",
+      "onSinglePageLoading",
+      "onSinglePageContent",
+      "onSinglePageLoaded",
+      "onPagesDiscovered",
+      "onPagesLoaded",
+      "onCurrentPageDiscovered",
+      "onPageTreeBuilt",
+      "onPageRendering",
+      "onPageRendered",
+      "onYamlParserRegistered",
+      "onParsedownRegistered",
+      "onTwigRegistered"
+    ],
+    "both": [
+      {
+        "pico": "onPluginsLoaded",
+        "pigo": "onPluginsLoaded"
+      },
+      {
+        "pico": "onConfigLoaded",
+        "pigo": "onConfigLoaded"
+      },
+      {
+        "pico": "onThemeLoading",
+        "pigo": "onThemeLoading"
+      },
+      {
+        "pico": "onRequestUrl",
+        "pigo": "onRequestUrl"
+      },
+      {
+        "pico": "onRequestFile",
+        "pigo": "onRequestFile"
+      },
+      {
+        "pico": "onContentLoading",
+        "pigo": "onContentLoading"
+      },
+      {
+        "pico": "on404ContentLoading",
+        "pigo": "on404ContentLoading"
+      },
+      {
+        "pico": "on404ContentLoaded",
+        "pigo": "on404ContentLoaded"
+      },
+      {
+        "pico": "onContentLoaded",
+        "pigo": "onContentLoaded"
+      },
+      {
+        "pico": "onMetaParsing",
+        "pigo": "onMetaParsing"
+      },
+      {
+        "pico": "onMetaParsed",
+        "pigo": "onMetaParsed"
+      },
+      {
+        "pico": "onContentParsing",
+        "pigo": "onContentParsing"
+      },
+      {
+        "pico": "onContentPrepared",
+        "pigo": "onContentPrepared"
+      },
+      {
+        "pico": "onContentParsed",
+        "pigo": "onContentParsed"
+      },
+      {
+        "pico": "onPagesLoading",
+        "pigo": "onPagesLoading"
+      },
+      {
+        "pico": "onPagesDiscovered",
+        "pigo": "onPagesDiscovered"
+      },
+      {
+        "pico": "onPagesLoaded",
+        "pigo": "onPagesLoaded"
+      },
+      {
+        "pico": "onPageTreeBuilt",
+        "pigo": "onPageTreeBuilt"
+      },
+      {
+        "pico": "onPageRendering",
+        "pigo": "onPageRendering"
+      },
+      {
+        "pico": "onPageRendered",
+        "pigo": "onPageRendered"
+      },
+      {
+        "pico": "onPluginManuallyLoaded",
+        "pigo": "onPluginManuallyLoaded"
+      },
+      {
+        "pico": "onMetaHeaders",
+        "pigo": "onMetaHeaders"
+      },
+      {
+        "pico": "onYamlParserRegistered",
+        "pigo": "onYamlParserRegistered"
+      },
+      {
+        "pico": "onParsedownRegistered",
+        "pigo": "onParsedownRegistered"
+      },
+      {
+        "pico": "onSinglePageLoading",
+        "pigo": "onSinglePageLoading"
+      },
+      {
+        "pico": "onSinglePageContent",
+        "pigo": "onSinglePageContent"
+      },
+      {
+        "pico": "onSinglePageLoaded",
+        "pigo": "onSinglePageLoaded"
+      },
+      {
+        "pico": "onTwigRegistered",
+        "pigo": "onTwigRegistered"
+      }
+    ],
+    "pico_only": null,
+    "pigo_only": [
+      "onCurrentPageDiscovered",
+      "onThemeLoaded"
+    ]
+  },
+  "config_keys": {
+    "source_pico": "config/config.yml.template",
+    "source_pigo": "config/config.go",
+    "pico": [
+      "site_title",
+      "base_url",
+      "rewrite_url",
+      "debug",
+      "timezone",
+      "locale",
+      "theme",
+      "themes_url",
+      "theme_config",
+      "twig_config",
+      "date_format",
+      "pages_order_by_meta",
+      "pages_order_by",
+      "pages_order",
+      "content_dir",
+      "content_ext",
+      "content_config",
+      "assets_dir",
+      "assets_url",
+      "plugins_url",
+      "my_custom_setting"
+    ],
+    "pigo": [
+      "site_title",
+      "base_url",
+      "rewrite_url",
+      "debug",
+      "timezone",
+      "locale",
+      "theme",
+      "themes_url",
+      "theme_config",
+      "twig_config",
+      "date_format",
+      "pages_order_by",
+      "pages_order_by_meta",
+      "pages_order",
+      "content_dir",
+      "content_ext",
+      "content_config",
+      "assets_dir",
+      "assets_url",
+      "plugins_url",
+      "template_engine",
+      "log_level",
+      "log_format",
+      "serve_root_static",
+      "plugins"
+    ],
+    "both": [
+      {
+        "pico": "site_title",
+        "pigo": "site_title"
+      },
+      {
+        "pico": "base_url",
+        "pigo": "base_url"
+      },
+      {
+        "pico": "rewrite_url",
+        "pigo": "rewrite_url"
+      },
+      {
+        "pico": "debug",
+        "pigo": "debug"
+      },
+      {
+        "pico": "timezone",
+        "pigo": "timezone"
+      },
+      {
+        "pico": "locale",
+        "pigo": "locale"
+      },
+      {
+        "pico": "theme",
+        "pigo": "theme"
+      },
+      {
+        "pico": "themes_url",
+        "pigo": "themes_url"
+      },
+      {
+        "pico": "theme_config",
+        "pigo": "theme_config"
+      },
+      {
+        "pico": "twig_config",
+        "pigo": "twig_config"
+      },
+      {
+        "pico": "date_format",
+        "pigo": "date_format"
+      },
+      {
+        "pico": "pages_order_by_meta",
+        "pigo": "pages_order_by_meta"
+      },
+      {
+        "pico": "pages_order_by",
+        "pigo": "pages_order_by"
+      },
+      {
+        "pico": "pages_order",
+        "pigo": "pages_order"
+      },
+      {
+        "pico": "content_dir",
+        "pigo": "content_dir"
+      },
+      {
+        "pico": "content_ext",
+        "pigo": "content_ext"
+      },
+      {
+        "pico": "content_config",
+        "pigo": "content_config"
+      },
+      {
+        "pico": "assets_dir",
+        "pigo": "assets_dir"
+      },
+      {
+        "pico": "assets_url",
+        "pigo": "assets_url"
+      },
+      {
+        "pico": "plugins_url",
+        "pigo": "plugins_url"
+      }
+    ],
+    "pico_only": [
+      "my_custom_setting"
+    ],
+    "pigo_only": [
+      "log_format",
+      "log_level",
+      "plugins",
+      "serve_root_static",
+      "template_engine"
+    ]
+  },
+  "template_vars": {
+    "source_pico": "lib/Pico.php",
+    "source_pigo": "render/context.go",
+    "pico": [
+      "config",
+      "base_url",
+      "plugins_url",
+      "themes_url",
+      "assets_url",
+      "theme_url",
+      "site_title",
+      "meta",
+      "content",
+      "pages",
+      "previous_page",
+      "current_page",
+      "next_page",
+      "version"
+    ],
+    "pigo": [
+      "config",
+      "base_url",
+      "theme_url",
+      "themes_url",
+      "assets_url",
+      "plugins_url",
+      "site_title",
+      "version",
+      "meta",
+      "content",
+      "pages",
+      "pages_by_id",
+      "current_page",
+      "previous_page",
+      "next_page",
+      "page_tree"
+    ],
+    "both": [
+      {
+        "pico": "config",
+        "pigo": "config"
+      },
+      {
+        "pico": "base_url",
+        "pigo": "base_url"
+      },
+      {
+        "pico": "plugins_url",
+        "pigo": "plugins_url"
+      },
+      {
+        "pico": "themes_url",
+        "pigo": "themes_url"
+      },
+      {
+        "pico": "assets_url",
+        "pigo": "assets_url"
+      },
+      {
+        "pico": "theme_url",
+        "pigo": "theme_url"
+      },
+      {
+        "pico": "site_title",
+        "pigo": "site_title"
+      },
+      {
+        "pico": "meta",
+        "pigo": "meta"
+      },
+      {
+        "pico": "content",
+        "pigo": "content"
+      },
+      {
+        "pico": "pages",
+        "pigo": "pages"
+      },
+      {
+        "pico": "previous_page",
+        "pigo": "previous_page"
+      },
+      {
+        "pico": "current_page",
+        "pigo": "current_page"
+      },
+      {
+        "pico": "next_page",
+        "pigo": "next_page"
+      },
+      {
+        "pico": "version",
+        "pigo": "version"
+      }
+    ],
+    "pico_only": null,
+    "pigo_only": [
+      "page_tree",
+      "pages_by_id"
+    ]
+  },
+  "meta_headers": {
+    "source_pico": "lib/Pico.php",
+    "source_pigo": "pigo.go",
+    "pico": [
+      "title",
+      "description",
+      "author",
+      "date",
+      "date_formatted",
+      "time",
+      "robots",
+      "template",
+      "hidden"
+    ],
+    "pigo": [
+      "title",
+      "description",
+      "author",
+      "date",
+      "date_formatted",
+      "time",
+      "robots",
+      "template",
+      "hidden"
+    ],
+    "both": [
+      {
+        "pico": "title",
+        "pigo": "title"
+      },
+      {
+        "pico": "description",
+        "pigo": "description"
+      },
+      {
+        "pico": "author",
+        "pigo": "author"
+      },
+      {
+        "pico": "date",
+        "pigo": "date"
+      },
+      {
+        "pico": "date_formatted",
+        "pigo": "date_formatted"
+      },
+      {
+        "pico": "time",
+        "pigo": "time"
+      },
+      {
+        "pico": "robots",
+        "pigo": "robots"
+      },
+      {
+        "pico": "template",
+        "pigo": "template"
+      },
+      {
+        "pico": "hidden",
+        "pigo": "hidden"
+      }
+    ],
+    "pico_only": null,
+    "pigo_only": null
+  },
+  "twig_filters": {
+    "source_pico": "lib/PicoTwigExtension.php",
+    "source_pigo": "render/twig.go",
+    "pico": [
+      "markdown",
+      "map",
+      "sort_by",
+      "link",
+      "url",
+      "content"
+    ],
+    "pigo": [
+      "markdown",
+      "url",
+      "link",
+      "content",
+      "sort_by",
+      "map"
+    ],
+    "both": [
+      {
+        "pico": "markdown",
+        "pigo": "markdown"
+      },
+      {
+        "pico": "map",
+        "pigo": "map"
+      },
+      {
+        "pico": "sort_by",
+        "pigo": "sort_by"
+      },
+      {
+        "pico": "link",
+        "pigo": "link"
+      },
+      {
+        "pico": "url",
+        "pigo": "url"
+      },
+      {
+        "pico": "content",
+        "pigo": "content"
+      }
+    ],
+    "pico_only": null,
+    "pigo_only": null,
+    "note": "Only Pico-specific filters are diffed. Standard PHP-Twig built-ins (upper, lower, date, …) are provided by stick on the pigo side; their coverage is tracked via stick's own tests."
+  },
+  "twig_functions": {
+    "source_pico": "lib/PicoTwigExtension.php",
+    "source_pigo": "render/twig.go",
+    "pico": [
+      "url_param",
+      "form_param",
+      "pages"
+    ],
+    "pigo": [
+      "url_param",
+      "form_param",
+      "pages"
+    ],
+    "both": [
+      {
+        "pico": "url_param",
+        "pigo": "url_param"
+      },
+      {
+        "pico": "form_param",
+        "pigo": "form_param"
+      },
+      {
+        "pico": "pages",
+        "pigo": "pages"
+      }
+    ],
+    "pico_only": null,
+    "pigo_only": null,
+    "note": "Only Pico-specific functions are diffed. Standard PHP-Twig built-ins live in stick."
+  },
+  "cli_flags": {
+    "source_pico": "(n/a — Pico is web-only)",
+    "source_pigo": "cmd/pigo/main.go",
+    "pico": null,
+    "pigo": [
+      "root",
+      "config",
+      "content",
+      "themes",
+      "assets",
+      "addr",
+      "list-plugins",
+      "log-level",
+      "log-format"
+    ],
+    "both": null,
+    "pico_only": null,
+    "pigo_only": [
+      "addr",
+      "assets",
+      "config",
+      "content",
+      "list-plugins",
+      "log-format",
+      "log-level",
+      "root",
+      "themes"
+    ],
+    "note": "Pico is a PHP web app with no CLI. Every entry here is a pigo-only operational flag by design."
+  }
+}

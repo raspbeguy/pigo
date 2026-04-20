@@ -1,0 +1,106 @@
+# Hand-curated annotations for the parity summary. Items listed here show up
+# next to their name in docs/parity/SUMMARY.md, so readers can tell intentional
+# divergences from unintentional gaps at a glance.
+#
+# Each category key matches cmd/parity's Category.Key. Within a category:
+#   pico_only  — items Pico has that pigo does not, with a reason
+#   pigo_only  — items pigo has that Pico does not, with a reason
+#
+# Unannotated items show up without a tail; that's the "unexplained gap"
+# signal the parity job is designed to surface. Use folded-scalar style (>)
+# for multi-line reasons so the rendered Markdown bullet stays on one line.
+
+events:
+  pigo_only:
+    - name: onThemeLoaded
+      reason: >
+        Fired after theme resolution; pigo splits Pico's single onThemeLoading
+        event into before/after halves so plugins can react to the resolved
+        theme name.
+    - name: onCurrentPageDiscovered
+      reason: >
+        Fired per-request once the canonical page for the URL is identified.
+        Pico has no equivalent — a plugin would have to re-resolve the current
+        page from $pages plus the request URL. Pigo lifts that into a
+        first-class event.
+
+config_keys:
+  pico_only:
+    - name: my_custom_setting
+      reason: >
+        Illustrative example in config.yml.template, not a real Pico config
+        key. Pico (and pigo) stash any unrecognised key under the catch-all
+        Custom map. Listed here only because the regex extractor can't tell an
+        example from a real key.
+  pigo_only:
+    - name: template_engine
+      reason: pigo supports Go html/template as an alternative to Twig (default twig).
+    - name: log_level
+      reason: pigo's structured-logging (slog) extension. Accepts debug|info|warn|error.
+    - name: log_format
+      reason: pigo's structured-logging extension. Accepts text|json.
+    - name: serve_root_static
+      reason: >
+        When true (default), pigo serves files sitting under --root (favicon.ico,
+        robots.txt, google-verify tokens) as static files when no page matches.
+        Set to false when fronting pigo with nginx/Apache that serves these
+        already. Pico relies on .htaccess to do the same filtering on the
+        webserver side.
+    - name: plugins
+      reason: >
+        Pigo plugins are compiled into the binary. This key lets a site enable
+        specific registered plugins by name. Pico's equivalent is the
+        plugin-directory drop-in model plus plugin-specific `PluginName.enabled`
+        keys in config.
+
+template_vars:
+  pigo_only:
+    - name: pages_by_id
+      reason: >
+        Same data as `pages` but as a Go map for O(1) lookups in plugin code.
+        Themes should prefer `pages` (ordered hash) — Pico templates already
+        did `pages[id]` against the id-keyed assoc array.
+    - name: page_tree
+      reason: >
+        Hierarchical view of pages built from the flat list. Pico exposes the
+        tree to plugins via getPageTree() but not as a Twig variable; pigo
+        makes it directly template-accessible so nav partials don't need a
+        plugin.
+
+meta_headers:
+  # Fully-shared — pigo's defaultMetaHeaders mirrors Pico's getMetaHeaders().
+
+twig_filters:
+  # Fully-shared on the Pico-specific surface. Standard PHP-Twig built-in
+  # filters (date, escape, upper, etc.) are supplied by stick on the pigo
+  # side and tracked in stick's own test suite — not diffed here.
+
+twig_functions:
+  # Fully-shared on the Pico-specific surface. Same note as twig_filters re:
+  # standard PHP-Twig built-ins.
+
+cli_flags:
+  # Pico has no CLI; every pigo flag is pigo-only by design. Per-flag reasons
+  # would be noise. Readers should assume "pigo's operational surface" for
+  # every entry in the pigo_only bucket of this category.
+
+# Behavioural divergences — not mechanically detectable because the APIs
+# happen to share names but diverge in semantics. Curate additions here as
+# they come up.
+behavioural:
+  - name: Markdown renderer
+    reason: >
+      Pico uses Parsedown Extra (PHP); pigo uses goldmark (Go). Output is
+      broadly compatible but whitespace, id-slug rules, and a few extended
+      constructs differ. No programmatic workaround — use a theme-level check
+      if byte-identical output matters.
+  - name: Filesystem case sensitivity
+    reason: >
+      Page IDs are derived from file paths and are case-sensitive. On a
+      case-insensitive filesystem (macOS HFS+, Windows) two pages whose IDs
+      differ only in case map to the same file, which yields surprising 404s.
+      Use lowercase-only paths to stay portable.
+  - name: Symlinked content
+    reason: >
+      Pigo's content scanner follows symlinks, matching Pico. Broken symlinks
+      are skipped silently rather than producing a 500.

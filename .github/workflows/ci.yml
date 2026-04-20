@@ -25,3 +25,35 @@ jobs:
 
       - name: Build
         run: go build ./...
+
+  parity:
+    # Regenerates docs/parity/data.json and SUMMARY.md against the Pico
+    # commit pinned in docs/parity/pico.ref, and fails if the committed
+    # files would change. Fix by running `go run ./cmd/parity --pico-dir
+    # ../Pico` locally and committing the result.
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout pigo
+        uses: actions/checkout@v4
+        with:
+          path: pigo
+
+      - name: Read pinned Pico ref
+        id: picoref
+        run: echo "sha=$(cat pigo/docs/parity/pico.ref)" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout Pico
+        uses: actions/checkout@v4
+        with:
+          repository: picocms/Pico
+          ref: ${{ steps.picoref.outputs.sha }}
+          path: Pico
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.26'
+
+      - name: Check parity is up to date
+        working-directory: pigo
+        run: go run ./cmd/parity --pico-dir ../Pico --check

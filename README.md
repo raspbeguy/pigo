@@ -144,6 +144,15 @@ it's faster and keeps pigo focused on dynamic content.
 
 ## Known divergences from Pico
 
+See [docs/parity/SUMMARY.md](docs/parity/SUMMARY.md) for the auto-generated
+diff of pigo's public surface against Pico's, across seven categories
+(events, config keys, template variables, meta headers, Twig filters/
+functions, CLI flags). Regenerate with
+`go run ./cmd/parity --pico-dir ../Pico`; CI re-runs it against the Pico
+commit pinned in `docs/parity/pico.ref` and fails on drift.
+
+Quick highlights not covered by the name-surface diff:
+
 - Plugins must be Go, not PHP.
 - Twig support via stick is ~Twig 1.x; a few advanced PHP-Twig features
   (e.g. some filter edge cases) may not be identical.
