@@ -115,3 +115,44 @@ func TestResolveEmptyFlagPointerFallsThrough(t *testing.T) {
 		t.Errorf("empty flag should fall through: got %+v", opts)
 	}
 }
+
+// TestParseLevelWhitespace / case-insensitivity: the `parseLevel` helper
+// is supposed to trim whitespace and normalize case so YAML like
+// ` Info ` or ` DEBUG ` doesn't fail validation.
+func TestLevelWhitespaceAndCase(t *testing.T) {
+	cases := []struct {
+		in string
+		ok bool
+	}{
+		{"  Info  ", true},
+		{"DEBUG", true},
+		{"Warn", true},
+		{"warning", true}, // alias
+		{"err", true},     // alias
+		{"\tERROR\n", true},
+		{"loud", false},
+	}
+	for _, tc := range cases {
+		_, err := New(Options{Level: tc.in})
+		if (err == nil) != tc.ok {
+			t.Errorf("New(Level=%q): err=%v, wantOK=%v", tc.in, err, tc.ok)
+		}
+	}
+}
+
+// TestResolveMapWithNonStringValue: YAML sometimes decodes a key to a
+// non-string (e.g. int or bool). The stringFromMap helper should
+// gracefully ignore those rather than panicking or emitting garbage.
+func TestResolveMapWithNonStringValue(t *testing.T) {
+	t.Setenv("PIGO_LOG_LEVEL", "")
+	t.Setenv("PIGO_LOG_FORMAT", "")
+	cfg := map[string]any{
+		"log_level":  42,   // wrong type
+		"log_format": true, // wrong type
+		"unrelated":  "x",
+	}
+	opts := Resolve(nil, nil, cfg)
+	if opts.Level != "" || opts.Format != "" {
+		t.Errorf("non-string config values should be ignored: got %+v", opts)
+	}
+}

@@ -251,6 +251,27 @@ case plugin.OnRequestURL:
 
 ---
 
+## 5b. Cancellation semantics
+
+Plugins occasionally need to opt a request out of the default flow —
+e.g. to short-circuit a page load that a virtual-URL plugin is going to
+handle itself. Not every event supports this; the contract per event:
+
+| Event | Cancellation signal | Effect |
+|---|---|---|
+| `OnSinglePageLoading` | set `*id = ""` | Scanner returns `(nil, nil)`; handler treats the request as 404. |
+| `OnRequestFile` | set `*filePath = ""` | Handler treats the request as 404 (same 404 fallthrough used for genuine misses). |
+| `OnPageRendering` | set `*status = …` + override `*tmpl` + headers | Serves a synthesized response. See §6 for the robots.txt pattern. |
+| Any observation event (`OnContentLoaded`, `OnContentParsed`, `OnPageRendered`) | — | No cancellation. Returning an error is logged at warn level but the request continues. |
+
+If an event isn't listed above, the contract is **no cancellation**:
+you can read and mutate params, but returning a non-nil error just
+surfaces a warn log — the handler keeps going. This mirrors Pico's
+observation-heavy event design and avoids having a misbehaving plugin
+500 every request.
+
+---
+
 ## 6. Response control (Content-Type, status, virtual URLs)
 
 Pigo extends `OnPageRendering` with response metadata so plugins can serve

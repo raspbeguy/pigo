@@ -150,6 +150,16 @@ it's faster and keeps pigo focused on dynamic content.
 - Markdown is rendered by [goldmark](https://github.com/yuin/goldmark) instead
   of Parsedown Extra — output should be ~identical, but minor whitespace
   differences are possible.
+- The root-static blocklist compares request paths as-is. On
+  case-insensitive filesystems (macOS, most Windows), a request to
+  `/Config/config.yml` can resolve to `--root/config/config.yml` and slip
+  past the `config/` prefix match. Run pigo on case-sensitive storage
+  (Linux, case-sensitive APFS) or front it with a webserver that handles
+  static files.
+- `resolveRootStatic` joins the request path with `--root` and confirms the
+  result stays inside `--root`, but doesn't call `filepath.EvalSymlinks`.
+  Symlinks under `--root` that point outside are followed. Operator-
+  controlled; low real risk, but worth knowing.
 
 ## License
 
