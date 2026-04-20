@@ -200,8 +200,34 @@ func (p *Plugin) onRequestFile(filePath *string) error {
 		return nil
 	}
 	sort.Strings(matches)
-	*filePath = matches[len(matches)-1]
+	picked := matches[len(matches)-1]
+	// Defense in depth: glob patterns are operator-controlled but the
+	// glob engine accepts `..` segments that would resolve outside
+	// contentDir. Verify the match still lives under contentDir before
+	// redirecting the caller there.
+	if !underDir(contentDir, picked) {
+		return nil
+	}
+	*filePath = picked
 	return nil
+}
+
+// underDir reports whether child's absolute path is within parent's
+// absolute path (or equals it). Parent and child may be relative;
+// filepath.Abs normalizes both.
+func underDir(parent, child string) bool {
+	p, err := filepath.Abs(parent)
+	if err != nil {
+		return false
+	}
+	c, err := filepath.Abs(child)
+	if err != nil {
+		return false
+	}
+	if c == p {
+		return true
+	}
+	return strings.HasPrefix(c, p+string(filepath.Separator))
 }
 
 // contentDir returns the absolute content directory that pigo resolved
