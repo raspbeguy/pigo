@@ -14,6 +14,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"sync"
 
 	"github.com/raspbeguy/pigo/config"
 	"github.com/raspbeguy/pigo/content"
@@ -40,7 +41,15 @@ type Options struct {
 }
 
 // Site is a live pigo instance, reloadable via Reload().
+//
+// Concurrency: mu guards the mutable state that Reload rewrites
+// (cfg/pages/pageByID/pageTree/markdown/scanner fields). Reload takes
+// the write lock; Handler takes the read lock once to snapshot these
+// fields into a server.Deps. After a Reload, call Handler() again to
+// pick up the new state — the previously returned http.Handler holds
+// a frozen snapshot.
 type Site struct {
+	mu            sync.RWMutex
 	opts          Options
 	cfg           *config.Config
 	pages         []*content.Page
@@ -225,12 +234,18 @@ func (s *Site) loadPages() error {
 }
 
 // Reload re-scans content and re-parses config. Useful for long-running
-// servers on sites that change without a restart.
+// servers on sites that change without a restart. Takes the write lock
+// so concurrent Handler() / Config() calls see a consistent snapshot.
+// Handlers already returned from Handler() keep serving the old state
+// until they're replaced — re-call Handler() and swap the http.Handler
+// to pick up the new state.
 func (s *Site) Reload() error {
 	cfg, err := config.Load(s.opts.ConfigDir)
 	if err != nil {
 		return err
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.cfg = cfg
 	s.markdown = content.NewMarkdown(cfg.ContentConfig)
 	s.scanner.Ext = cfg.ContentExt
@@ -239,10 +254,18 @@ func (s *Site) Reload() error {
 }
 
 // Config exposes the current parsed config.
-func (s *Site) Config() *config.Config { return s.cfg }
+func (s *Site) Config() *config.Config {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.cfg
+}
 
-// Handler returns an http.Handler serving the site.
+// Handler returns an http.Handler serving the site. The returned
+// handler holds a snapshot of the current state taken under the read
+// lock; see Reload for how to pick up changes.
 func (s *Site) Handler() http.Handler {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return server.New(&server.Deps{
 		Config:        s.cfg,
 		ContentDir:    s.contentDir,
