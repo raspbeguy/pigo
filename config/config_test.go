@@ -70,6 +70,35 @@ func TestCustomKeys(t *testing.T) {
 	}
 }
 
+func TestServeRootStatic(t *testing.T) {
+	// Default (key absent): AsMap surfaces true.
+	cfg, err := Load(filepath.Join(t.TempDir(), "nope"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.ServeRootStatic != nil {
+		t.Errorf("default: got %v, want nil pointer", cfg.ServeRootStatic)
+	}
+	if cfg.AsMap()["serve_root_static"] != true {
+		t.Errorf("default AsMap: got %v, want true", cfg.AsMap()["serve_root_static"])
+	}
+
+	// First file wins (a.yml=false beats b.yml=true).
+	dir := t.TempDir()
+	writeFile(t, filepath.Join(dir, "a.yml"), "serve_root_static: false\n")
+	writeFile(t, filepath.Join(dir, "b.yml"), "serve_root_static: true\n")
+	cfg, err = Load(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if cfg.ServeRootStatic == nil || *cfg.ServeRootStatic != false {
+		t.Errorf("merge: got %v, want *false", cfg.ServeRootStatic)
+	}
+	if cfg.AsMap()["serve_root_static"] != false {
+		t.Errorf("merge AsMap: got %v, want false", cfg.AsMap()["serve_root_static"])
+	}
+}
+
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
 	if err := os.WriteFile(path, []byte(content), 0o644); err != nil {

@@ -132,8 +132,13 @@ func handlePage(w http.ResponseWriter, r *http.Request, d *Deps, assetsDir strin
 		// at the site root and are served as plain files. Mirror Pico's
 		// .htaccess rules: deny config/content/vendor/.git/etc. and
 		// dotfile paths (except .well-known/), then serve whatever's
-		// left.
-		if reqPath != "" && !staticBlocked(reqPath) {
+		// left. Can be turned off (serve_root_static: false) for sites
+		// running behind a webserver that handles statics.
+		serveStatic := true
+		if d.Config.ServeRootStatic != nil {
+			serveStatic = *d.Config.ServeRootStatic
+		}
+		if serveStatic && reqPath != "" && !staticBlocked(reqPath) {
 			if staticPath, safe := resolveRootStatic(d.RootDir, reqPath); safe {
 				if info, err := os.Stat(staticPath); err == nil && !info.IsDir() {
 					http.ServeFile(w, r, staticPath)

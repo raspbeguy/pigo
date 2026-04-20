@@ -45,6 +45,14 @@ type Config struct {
 	LogLevel       string         `yaml:"log_level"`       // debug|info|warn|error; pigo extension
 	LogFormat      string         `yaml:"log_format"`      // text|json; pigo extension
 
+	// ServeRootStatic controls whether pigo serves files sitting
+	// directly under --root (favicon.ico, robots.txt, google-verify
+	// tokens, etc.) as static files when no content page matches. Set
+	// to false when running behind a webserver (nginx/Apache) that
+	// already serves those files. Pico-blocked paths (config/,
+	// content/, …) are denied regardless. Default: true.
+	ServeRootStatic *bool `yaml:"serve_root_static"` // pigo extension
+
 	// Plugins lists plugins to enable for this site by registered name. At
 	// Site init, pigo resolves each name against the in-process plugin
 	// registry (see plugin.Register). Example:
@@ -147,6 +155,9 @@ func (c *Config) merge(src *Config) {
 	}
 	if c.RewriteURL == nil {
 		c.RewriteURL = src.RewriteURL
+	}
+	if c.ServeRootStatic == nil {
+		c.ServeRootStatic = src.ServeRootStatic
 	}
 	if !c.Debug && src.Debug {
 		c.Debug = src.Debug
@@ -290,6 +301,7 @@ func (c *Config) AsMap() map[string]any {
 		"template_engine":     c.TemplateEngine,
 		"log_level":           c.LogLevel,
 		"log_format":          c.LogFormat,
+		"serve_root_static":   derefBoolDefault(c.ServeRootStatic, true),
 	}
 	for k, v := range c.Custom {
 		if _, exists := out[k]; !exists {
@@ -297,6 +309,16 @@ func (c *Config) AsMap() map[string]any {
 		}
 	}
 	return out
+}
+
+// derefBoolDefault reads an optional *bool, returning def when the pointer
+// is nil. Used for config fields whose default is context-sensitive (the
+// nil → default mapping lives at each read site, not in Defaults()).
+func derefBoolDefault(p *bool, def bool) bool {
+	if p == nil {
+		return def
+	}
+	return *p
 }
 
 func derefBool(p *bool) bool {

@@ -127,6 +127,10 @@ Root-level files (`favicon.ico`, `robots.txt`, Google site-verification tokens,
 etc.) placed directly in `--root/` are served as static files after content
 lookup fails and before the 404 page. No separate webserver needed.
 
+In production behind nginx/Apache, set `serve_root_static: false` in
+`config/config.yml` so the webserver in front handles static files directly —
+it's faster and keeps pigo focused on dynamic content.
+
 ## Known divergences from Pico
 
 - Plugins must be Go, not PHP.
