@@ -1,0 +1,24 @@
+# Dependabot config — opens PRs for outdated Go modules and GitHub Actions.
+# Grouped updates keep churn low; weekly cadence is enough for a project
+# that isn't a security-critical dependency itself.
+version: 2
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      go-deps:
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns:
+          - "*"
