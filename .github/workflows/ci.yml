@@ -10,10 +10,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.26'
 
@@ -34,7 +34,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout pigo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: pigo
 
@@ -43,14 +43,14 @@ jobs:
         run: echo "sha=$(cat pigo/docs/parity/pico.ref)" >> "$GITHUB_OUTPUT"
 
       - name: Checkout Pico
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: picocms/Pico
           ref: ${{ steps.picoref.outputs.sha }}
           path: Pico
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version: '1.26'
 
