@@ -9,19 +9,35 @@ sites on maintained software.
 
 ## Status
 
-**Early development — everything can change.** Config keys, CLI flags, plugin
-lifecycle events, exported Go APIs, the router's request-path semantics, the
-template context shape — treat all of it as unstable until a tagged release
-cuts. Pin a specific commit if you're building on pigo, and expect to
-revisit that pin regularly.
+**Early development — breaking changes possible between minor releases.**
+While pigo is pre-1.0, config keys, CLI flags, plugin lifecycle events,
+exported Go APIs, the router's request-path semantics, and the template
+context shape can still change. Pin a specific release tag if you're
+building on pigo, and skim the release notes on each bump. See
+[`docs/parity/SUMMARY.md`](docs/parity/SUMMARY.md) for the current diff
+against Pico.
 
-Core rendering works (both engines), unit + integration tests pass. Plugins
-require a Go port — PHP plugins cannot be loaded.
+Core rendering works on both template engines, unit + integration tests
+pass, CI enforces parity with upstream Pico. Plugins require a Go port —
+PHP plugins cannot be loaded.
 
 ## Install / run
 
+**Prebuilt binary** (Linux/macOS/Windows, amd64/arm64/armv7):
+[GitHub Releases](https://github.com/raspbeguy/pigo/releases/latest). Each
+archive ships the binary, `README.md`, `LICENSE`, and a `.sha256` checksum.
+
+**From source** (Go 1.26+):
+
 ```sh
-cd pigo
+go install github.com/raspbeguy/pigo/cmd/pigo@latest
+pigo --root /path/to/your/pico/site --addr :8080
+```
+
+**From a local checkout** (same tree, e.g. to add your own plugins):
+
+```sh
+git clone https://github.com/raspbeguy/pigo && cd pigo
 go build -o pigo ./cmd/pigo
 ./pigo --root /path/to/your/pico/site --addr :8080
 ```

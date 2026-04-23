@@ -1,5 +1,6 @@
-# Binaries produced by `go build ./cmd/pigo` or `go test -c`.
+# Binaries produced by `go build` or `go test -c`.
 /pigo
+/parity
 *.test
 
 # Go coverage output.
